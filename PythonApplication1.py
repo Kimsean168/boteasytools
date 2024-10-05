@@ -1,25 +1,34 @@
 import requests
 import time
+import os
 
-# Replace 'YOUR_TOKEN' with your actual bot token
-TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'
+# Load the bot token from an environment variable
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # Set this environment variable on Render
 URL = f'https://api.telegram.org/bot{TOKEN}'
 
 # Function to send messages
 def send_message(chat_id, text):
     payload = {'chat_id': chat_id, 'text': text}
-    requests.post(f"{URL}/sendMessage", data=payload)
+    response = requests.post(f"{URL}/sendMessage", data=payload)
+    return response
 
 # Function to send photos
 def send_photo(chat_id, photo):
-    files = {'photo': open(photo, 'rb')}
-    requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
+    with open(photo, 'rb') as file:
+        files = {'photo': file}
+        response = requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
+    return response
 
 # Function to handle incoming updates
 def handle_updates():
     offset = 0
     while True:
         response = requests.get(f"{URL}/getUpdates?offset={offset}")
+        if response.status_code != 200:
+            print("Error fetching updates:", response.text)
+            time.sleep(5)  # Wait before retrying
+            continue
+
         updates = response.json().get('result', [])
         
         for update in updates:
@@ -30,8 +39,6 @@ def handle_updates():
             if command == '/start':
                 welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
                 send_message(chat_id, welcome_text)
-
-                # Send a welcome image
                 send_photo(chat_id, 'welcome.jpg')
 
             elif command == '/DemoVideo':
