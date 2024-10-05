@@ -33,12 +33,14 @@ def handle_updates():
         
         for update in updates:
             if 'message' in update:  # Check if there is a message
-                offset = update['update_id'] + 1  # Update offset to the next message
                 chat_id = update['message']['chat']['id']
                 command = update['message']['text']
 
                 # Process the command based on the received message
                 handle_command(command, chat_id)
+
+                # Update offset after handling the command to avoid re-processing
+                offset = update['update_id'] + 1  
 
         time.sleep(1)  # Sleep to avoid hitting the API rate limit
 
