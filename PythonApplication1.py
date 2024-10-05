@@ -1,8 +1,14 @@
-import telebot
+import requests
+import time
 
 # Replace 'YOUR_TOKEN' with your actual bot token
-TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'  # Use your actual token here
-bot = telebot.TeleBot(TOKEN)
+TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'
+URL = f'https://api.telegram.org/bot{TOKEN}'
+#import telebot
+
+# Replace 'YOUR_TOKEN' with your actual bot token
+#TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'  # Use your actual token here
+#bot = telebot.TeleBot(TOKEN)
 
 # Define command responses
 @bot.message_handler(commands=['start'])
