@@ -22,11 +22,13 @@ def send_photo(chat_id, photo):
 # Function to handle incoming updates
 def handle_updates():
     offset = None  # Start with no offset
+    processed_updates = set()  # To track processed updates
+
     while True:
         url = f"{URL}/getUpdates"
         if offset:
             url += f"?offset={offset}"
-        
+
         response = requests.get(url)
         if response.status_code != 200:
             print("Error fetching updates:", response.text)
@@ -36,15 +38,19 @@ def handle_updates():
         updates = response.json().get('result', [])
         
         for update in updates:
-            if 'message' in update:  # Check if there is a message
-                chat_id = update['message']['chat']['id']
-                command = update['message']['text']
+            update_id = update['update_id']
+            if update_id not in processed_updates:  # Check if the update is already processed
+                processed_updates.add(update_id)  # Mark this update as processed
 
-                # Process the command based on the received message
-                handle_command(command, chat_id)
+                if 'message' in update:  # Check if there is a message
+                    chat_id = update['message']['chat']['id']
+                    command = update['message']['text']
+
+                    # Process the command based on the received message
+                    handle_command(command, chat_id)
 
                 # Update offset to avoid re-processing
-                offset = update['update_id'] + 1  
+                offset = update_id + 1  
 
         time.sleep(1)  # Sleep to avoid hitting the API rate limit
 
