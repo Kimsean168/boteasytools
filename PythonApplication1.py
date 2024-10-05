@@ -32,50 +32,55 @@ def handle_updates():
         updates = response.json().get('result', [])
         
         for update in updates:
-            offset = update['update_id'] + 1
-            chat_id = update['message']['chat']['id']
-            command = update['message']['text']
+            if 'message' in update:  # Check if there is a message
+                offset = update['update_id'] + 1  # Update offset to the next message
+                chat_id = update['message']['chat']['id']
+                command = update['message']['text']
 
-            if command == '/start':
-                welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
-                send_message(chat_id, welcome_text)
-                send_photo(chat_id, 'welcome.jpg')
-
-            elif command == '/DemoVideo':
-                send_message(chat_id, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl')
-
-            elif command == '/BuyTool':
-                send_message(chat_id, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168')
-
-            elif command == '/Issue':
-                send_message(chat_id, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9')
-
-            elif command == '/TestingTool':
-                send_message(chat_id, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9')
-
-            elif command == '/Support':
-                send_message(chat_id, 'ទាក់ទងផ្នែក support: https://t.me/KSHD168')
-
-            elif command == '/Tiktok':
-                send_message(chat_id, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1')
-
-            elif command == '/About_Us':
-                send_message(chat_id, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥')
-
-            elif command == '/Help':
-                help_text = (
-                    "/DemoVideo - របៀបប្រើTools 💻\n"
-                    "/BuyTool - ទិញ Social Easy Tools 💲💰\n"
-                    "/Issue - រាយការណ៍បញ្ហា Tools 🛠\n"
-                    "/TestingTool - សុំសាកល្បងប្រើTools 🤳\n"
-                    "/Support - ទាក់ទងផ្នែក support 🔧\n"
-                    "/Tiktok - Link to our TikTok 🎬\n"
-                    "/About_Us - ស្វែងយល់បន្ថែមអំពីយើង 👁‍🗨 \n"
-                    "/Help - រាយបញ្ជីសេវាកម្មដែលមាន 👨‍🔧"
-                )
-                send_message(chat_id, help_text)
+                # Process the command based on the received message
+                handle_command(command, chat_id)
 
         time.sleep(1)  # Sleep to avoid hitting the API rate limit
+
+def handle_command(command, chat_id):
+    if command == '/start':
+        welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
+        send_message(chat_id, welcome_text)
+        send_photo(chat_id, 'welcome.jpg')
+
+    elif command == '/DemoVideo':
+        send_message(chat_id, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl')
+
+    elif command == '/BuyTool':
+        send_message(chat_id, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168')
+
+    elif command == '/Issue':
+        send_message(chat_id, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9')
+
+    elif command == '/TestingTool':
+        send_message(chat_id, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9')
+
+    elif command == '/Support':
+        send_message(chat_id, 'ទាក់ទងផ្នែក support: https://t.me/KSHD168')
+
+    elif command == '/Tiktok':
+        send_message(chat_id, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1')
+
+    elif command == '/About_Us':
+        send_message(chat_id, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥')
+
+    elif command == '/Help':
+        help_text = (
+            "/DemoVideo - របៀបប្រើTools 💻\n"
+            "/BuyTool - ទិញ Social Easy Tools 💲💰\n"
+            "/Issue - រាយការណ៍បញ្ហា Tools 🛠\n"
+            "/TestingTool - សុំសាកល្បងប្រើTools 🤳\n"
+            "/Support - ទាក់ទងផ្នែក support 🔧\n"
+            "/Tiktok - Link to our TikTok 🎬\n"
+            "/About_Us - ស្វែងយល់បន្ថែមអំពីយើង 👁‍🗨 \n"
+            "/Help - រាយបញ្ជីសេវាកម្មដែលមាន 👨‍🔧"
+        )
+        send_message(chat_id, help_text)
 
 if __name__ == '__main__':
     print("Bot is running......")
