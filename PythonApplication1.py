@@ -4,65 +4,72 @@ import time
 # Replace 'YOUR_TOKEN' with your actual bot token
 TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'
 URL = f'https://api.telegram.org/bot{TOKEN}'
-#import telebot
 
-# Replace 'YOUR_TOKEN' with your actual bot token
-#TOKEN = '7562016359:AAHkKTS_zZvcXpZy6jAHdEtdSX5FRR4XMrE'  # Use your actual token here
-#bot = telebot.TeleBot(TOKEN)
+# Function to send messages
+def send_message(chat_id, text):
+    payload = {'chat_id': chat_id, 'text': text}
+    requests.post(f"{URL}/sendMessage", data=payload)
 
-# Define command responses
-@bot.message_handler(commands=['start'])
-def start(message):
-    # Send a welcome message
-    welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
-    bot.send_message(message, welcome_text)
-    
-    # Send a welcome image (update 'welcome_image.jpg' to your image filename)
-    with open('welcome.jpg', 'rb') as photo:
-        bot.send_photo(message.chat.id, photo)
+# Function to send photos
+def send_photo(chat_id, photo):
+    files = {'photo': open(photo, 'rb')}
+    requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
 
-@bot.message_handler(commands=['DemoVideo'])
-def demo(message):
-    bot.send_message(message, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl')
+# Function to handle incoming updates
+def handle_updates():
+    offset = 0
+    while True:
+        response = requests.get(f"{URL}/getUpdates?offset={offset}")
+        updates = response.json().get('result', [])
+        
+        for update in updates:
+            offset = update['update_id'] + 1
+            chat_id = update['message']['chat']['id']
+            command = update['message']['text']
 
-@bot.message_handler(commands=['BuyTool'])
-def buy_tool(message):
-    bot.send_message(message, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168')
+            if command == '/start':
+                welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
+                send_message(chat_id, welcome_text)
 
-@bot.message_handler(commands=['Issue'])
-def issue(message):
-    bot.send_message(message, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9')
+                # Send a welcome image
+                send_photo(chat_id, 'welcome.jpg')
 
-@bot.message_handler(commands=['TestingTool'])
-def testing_tool(message):
-    bot.send_message(message, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9')
+            elif command == '/DemoVideo':
+                send_message(chat_id, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl')
 
-@bot.message_handler(commands=['Support'])
-def contact_support(message):
-    bot.send_message(message, 'ទាក់ទងផ្នែក support:https://t.me/KSHD168')
+            elif command == '/BuyTool':
+                send_message(chat_id, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168')
 
-@bot.message_handler(commands=['Tiktok'])
-def tiktok(message):
-    bot.send_message(message, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1')
+            elif command == '/Issue':
+                send_message(chat_id, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9')
 
-@bot.message_handler(commands=['About_Us'])
-def about(message):
-    bot.send_message(message, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥')
+            elif command == '/TestingTool':
+                send_message(chat_id, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9')
 
-@bot.message_handler(commands=['Help'])
-def help_command(message):
-    help_text = (
-        "/DemoVideo - របៀបប្រើTools 💻\n"
-        "/BuyTool - ទិញ Social Easy Tools 💲💰\n"
-        "/Issue - រាយការណ៍បញ្ហា Tools 🛠\n"
-        "/TestingTool - សុំសាកល្បងប្រើTools 🤳\n"
-        "/Support - ទាក់ទងផ្នែក support 🔧\n"
-        "/Tiktok - Link to our TikTok 🎬\n"
-        "/About_Us - ស្វែងយល់បន្ថែមអំពីយើង 👁‍🗨 \n"
-        "/Help - រាយបញ្ជីសេវាកម្មដែលមាន 👨‍🔧"
-    )
-    bot.send_message(message, help_text)
+            elif command == '/Support':
+                send_message(chat_id, 'ទាក់ទងផ្នែក support: https://t.me/KSHD168')
 
-print("Bot is running......")
-# Start polling for messages
-bot.polling()
+            elif command == '/Tiktok':
+                send_message(chat_id, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1')
+
+            elif command == '/About_Us':
+                send_message(chat_id, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥')
+
+            elif command == '/Help':
+                help_text = (
+                    "/DemoVideo - របៀបប្រើTools 💻\n"
+                    "/BuyTool - ទិញ Social Easy Tools 💲💰\n"
+                    "/Issue - រាយការណ៍បញ្ហា Tools 🛠\n"
+                    "/TestingTool - សុំសាកល្បងប្រើTools 🤳\n"
+                    "/Support - ទាក់ទងផ្នែក support 🔧\n"
+                    "/Tiktok - Link to our TikTok 🎬\n"
+                    "/About_Us - ស្វែងយល់បន្ថែមអំពីយើង 👁‍🗨 \n"
+                    "/Help - រាយបញ្ជីសេវាកម្មដែលមាន 👨‍🔧"
+                )
+                send_message(chat_id, help_text)
+
+        time.sleep(1)  # Sleep to avoid hitting the API rate limit
+
+if __name__ == '__main__':
+    print("Bot is running......")
+    handle_updates()
