@@ -1,28 +1,41 @@
 import requests
 import time
 import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 # Load the bot token from an environment variable
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # Set this environment variable on Render
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if TOKEN is None:
+    raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set.")
+    
 URL = f'https://api.telegram.org/bot{TOKEN}'
 
 # Function to send messages
 def send_message(chat_id, text):
     payload = {'chat_id': chat_id, 'text': text}
     response = requests.post(f"{URL}/sendMessage", data=payload)
+    if response.status_code != 200:
+        logging.error("Error sending message: %s", response.text)
     return response
 
 # Function to send photos
 def send_photo(chat_id, photo):
-    with open(photo, 'rb') as file:
-        files = {'photo': file}
-        response = requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
-    return response
+    try:
+        with open(photo, 'rb') as file:
+            files = {'photo': file}
+            response = requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
+            if response.status_code != 200:
+                logging.error("Error sending photo: %s", response.text)
+    except FileNotFoundError:
+        logging.error("File not found: %s", photo)
 
 # Function to handle incoming updates
 def handle_updates():
-    offset = None  # Start with no offset
-    processed_updates = set()  # To track processed updates
+    offset = None
+    processed_updates = set()
 
     while True:
         url = f"{URL}/getUpdates"
@@ -31,58 +44,38 @@ def handle_updates():
 
         response = requests.get(url)
         if response.status_code != 200:
-            print("Error fetching updates:", response.text)
-            time.sleep(5)  # Wait before retrying
+            logging.error("Error fetching updates: %s", response.text)
+            time.sleep(5)
             continue
 
         updates = response.json().get('result', [])
         
         for update in updates:
             update_id = update['update_id']
-            if update_id not in processed_updates:  # Check if the update is already processed
-                processed_updates.add(update_id)  # Mark this update as processed
+            if update_id not in processed_updates:
+                processed_updates.add(update_id)
 
-                if 'message' in update:  # Check if there is a message
+                if 'message' in update:
                     chat_id = update['message']['chat']['id']
                     command = update['message']['text']
 
-                    # Process the command based on the received message
                     handle_command(command, chat_id)
 
-                # Update offset to avoid re-processing
                 offset = update_id + 1  
 
-        time.sleep(1)  # Sleep to avoid hitting the API rate limit
+        time.sleep(1)  # Avoid hitting API rate limits
 
 def handle_command(command, chat_id):
-    if command == '/start':
-        welcome_text = "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! យើងរីករាយដែលមានអ្នកជាសមាជិក។ 🎉"
-        send_message(chat_id, welcome_text)
-        send_photo(chat_id, 'welcome.jpg')
-
-    elif command == '/DemoVideo':
-        send_message(chat_id, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl')
-
-    elif command == '/BuyTool':
-        send_message(chat_id, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168')
-
-    elif command == '/Issue':
-        send_message(chat_id, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9')
-
-    elif command == '/TestingTool':
-        send_message(chat_id, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9')
-
-    elif command == '/Support':
-        send_message(chat_id, 'ទាក់ទងផ្នែក support: https://t.me/KSHD168')
-
-    elif command == '/Tiktok':
-        send_message(chat_id, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1')
-
-    elif command == '/About_Us':
-        send_message(chat_id, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥')
-
-    elif command == '/Help':
-        help_text = (
+    command_handlers = {
+        '/start': lambda: send_message(chat_id, "សូមស្វាគមន៍មកកាន់ Robot របស់យើង! 🎉") or send_photo(chat_id, 'welcome.jpg'),
+        '/DemoVideo': lambda: send_message(chat_id, 'LinkVideo: https://t.me/+vAiZcNfW9elhNDdl'),
+        '/BuyTool': lambda: send_message(chat_id, 'ទំនាក់ទំនងទិញ: https://t.me/KSHD168'),
+        '/Issue': lambda: send_message(chat_id, 'ដើម្បីរាយការណ៍បញ្ហា: https://t.me/+2OfccpF-8wgyMDg9'),
+        '/TestingTool': lambda: send_message(chat_id, 'សុំសាកល្បងប្រើTools: https://t.me/+5ID_frxCxjk5OWU9'),
+        '/Support': lambda: send_message(chat_id, 'ទាក់ទងផ្នែក support: https://t.me/KSHD168'),
+        '/Tiktok': lambda: send_message(chat_id, 'Our TikTok: https://www.tiktok.com/@socialeasytools168?_t=8qIS9OuNBWX&_r=1'),
+        '/About_Us': lambda: send_message(chat_id, 'Social Easy Tools គឺជាឧបករណ៍ MMO ដែលជួយអ្នកឱ្យក្លាយជាអ្នកមានក្នុងពេលឆាប់ៗនេះ.😎👌🔥'),
+        '/Help': lambda: send_message(chat_id, (
             "/DemoVideo - របៀបប្រើTools 💻\n"
             "/BuyTool - ទិញ Social Easy Tools 💲💰\n"
             "/Issue - រាយការណ៍បញ្ហា Tools 🛠\n"
@@ -91,9 +84,15 @@ def handle_command(command, chat_id):
             "/Tiktok - Link to our TikTok 🎬\n"
             "/About_Us - ស្វែងយល់បន្ថែមអំពីយើង 👁‍🗨 \n"
             "/Help - រាយបញ្ជីសេវាកម្មដែលមាន 👨‍🔧"
-        )
-        send_message(chat_id, help_text)
+        )),
+    }
+
+    handler = command_handlers.get(command)
+    if handler:
+        handler()
+    else:
+        send_message(chat_id, "Unknown command. Type /Help for assistance.")
 
 if __name__ == '__main__':
-    print("Bot is running......")
+    logging.info("Bot is running...")
     handle_updates()
