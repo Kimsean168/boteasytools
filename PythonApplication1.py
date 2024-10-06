@@ -1,38 +1,3 @@
-import requests
-import time
-import os
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-
-# Load the bot token from an environment variable
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-if TOKEN is None:
-    raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set.")
-    
-URL = f'https://api.telegram.org/bot{TOKEN}'
-
-# Function to send messages
-def send_message(chat_id, text):
-    payload = {'chat_id': chat_id, 'text': text}
-    response = requests.post(f"{URL}/sendMessage", data=payload)
-    if response.status_code != 200:
-        logging.error("Error sending message: %s", response.text)
-    return response
-
-# Function to send photos
-def send_photo(chat_id, photo):
-    try:
-        with open(photo, 'rb') as file:
-            files = {'photo': file}
-            response = requests.post(f"{URL}/sendPhoto", data={'chat_id': chat_id}, files=files)
-            if response.status_code != 200:
-                logging.error("Error sending photo: %s", response.text)
-    except FileNotFoundError:
-        logging.error("File not found: %s", photo)
-
-# Function to handle incoming updates
 def handle_updates():
     offset = None
     processed_updates = set()
@@ -57,9 +22,13 @@ def handle_updates():
 
                 if 'message' in update:
                     chat_id = update['message']['chat']['id']
-                    command = update['message']['text']
-
-                    handle_command(command, chat_id)
+                    
+                    # Check if 'text' is in the message
+                    if 'text' in update['message']:
+                        command = update['message']['text']
+                        handle_command(command, chat_id)
+                    else:
+                        logging.warning("No text found in update: %s", update)
 
                 offset = update_id + 1  
 
@@ -92,7 +61,3 @@ def handle_command(command, chat_id):
         handler()
     else:
         send_message(chat_id, "Unknown command. Type /Help for assistance.")
-
-if __name__ == '__main__':
-    logging.info("Bot is running...")
-    handle_updates()
